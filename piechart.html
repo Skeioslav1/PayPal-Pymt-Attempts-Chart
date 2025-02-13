@@ -3,7 +3,7 @@
   <head>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-      google.charts.load("current", {packages:["corechart"]});
+      google.charts.load("current", { packages: ["corechart"] });
       google.charts.setOnLoadCallback(drawChart);
 
       function getQueryParam(param) {
@@ -13,27 +13,55 @@
 
       function drawChart() {
         try {
-          // Extract JSON data from the WebView URL
           var jsonData = getQueryParam("data");
           if (!jsonData) throw "No data found in URL.";
 
-          var parsedData = JSON.parse(decodeURIComponent(jsonData)); // Decode and parse JSON
+          var parsedData = JSON.parse(decodeURIComponent(jsonData));
 
-          // Convert JSON to Google Charts format
-          var data = [['Plan', 'Count']];
-          parsedData.forEach(item => {
-            data.push([item.Plan, item.Count]);
+          var data = [["Label", "Value"]];
+          parsedData.forEach((item) => {
+            data.push([item.Label, item.Value]);
           });
 
-          // Load data into Google Charts
           var dataTable = google.visualization.arrayToDataTable(data);
+
           var options = {
-            title: 'Subscription Plans',
-            pieHole: 0.4, // Donut chart style
-            chartArea: { width: '90%', height: '80%' },
+            chartArea: { width: "90%", height: "90%" },
+            pieHole: 0,
+            legend: "none",
+            backgroundColor: "transparent",
+            tooltip: { trigger: "none" }, // Disable tooltips to remove duplicate percentage
+            pieSliceText: "none", // Prevent Google Charts from showing % again
           };
 
-          var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+          var chart = new google.visualization.PieChart(document.getElementById("piechart"));
+
+          google.visualization.events.addListener(chart, "ready", function () {
+            var labelsContainer = document.getElementById("labels");
+            labelsContainer.innerHTML = ""; // Clear previous labels
+
+            var chartLayout = chart.getChartLayoutInterface();
+            var totalCount = parsedData.reduce((sum, item) => sum + item.Value, 0);
+
+            parsedData.forEach((item, index) => {
+              var sliceBounds = chartLayout.getBoundingBox("slice#" + index);
+              var percentage = ((item.Value / totalCount) * 100).toFixed(1) + "%";
+
+              var label = document.createElement("div");
+              label.style.position = "absolute";
+              label.style.left = sliceBounds.left + sliceBounds.width / 2 - 30 + "px";
+              label.style.top = sliceBounds.top + sliceBounds.height / 2 - 20 + "px";
+              label.style.fontSize = "14px";
+              label.style.color = "white";
+              label.style.fontWeight = "bold";
+              label.style.textAlign = "center";
+              label.style.width = "60px";
+              label.innerHTML = `<div>${item.Label}</div><div>${percentage}</div>`; // Label Name + % Below
+
+              labelsContainer.appendChild(label);
+            });
+          });
+
           chart.draw(dataTable, options);
         } catch (error) {
           console.error("Error processing chart data:", error);
@@ -41,8 +69,8 @@
       }
     </script>
   </head>
-  <body>
-    <div id="piechart" style="width: 100%; height: 400px;"></div>
+  <body style="position: relative;">
+    <div id="piechart" style="width: 500px; height: 500px;"></div>
+    <div id="labels" style="position: absolute; top: 0; left: 0; width: 500px; height: 500px; pointer-events: none;"></div>
   </body>
 </html>
-
