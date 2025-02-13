@@ -20,7 +20,7 @@
 
           var data = [["Label", "Value"]];
           parsedData.forEach((item) => {
-            data.push([item.Label, item.Value]);
+            data.push([item.Label, item.Value || 0]); // Ensure 0 values are accepted
           });
 
           var dataTable = google.visualization.arrayToDataTable(data);
@@ -45,7 +45,7 @@
 
             parsedData.forEach((item, index) => {
               var sliceBounds = chartLayout.getBoundingBox("slice#" + index);
-              var percentage = ((item.Value / totalCount) * 100).toFixed(1) + "%";
+              var percentage = totalCount > 0 ? ((item.Value / totalCount) * 100).toFixed(1) + "%" : "0%";
 
               var label = document.createElement("div");
               label.style.position = "absolute";
